@@ -155,6 +155,11 @@ class Endpoint(object):
                 request_dict, operation_model)
             success_response, exception = self._get_response(
                 request, operation_model, attempts)
+        # this *should* be None or a tuple
+        if isinstance(success_response, type(())) and len(success_response) > 1:
+            if 'ResponseMetadata' not in success_response[1]:
+                success_response[1]['ResponseMetadata'] = {}
+            success_response[1]['ResponseMetadata']['NumAttempts'] = attempts
         if exception is not None:
             raise exception
         else:
