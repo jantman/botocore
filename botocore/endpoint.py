@@ -142,9 +142,14 @@ class Endpoint(object):
         request = self.create_request(request_dict, operation_model)
         success_response, exception = self._get_response(
             request, operation_model, attempts)
+        retries = []
         while self._needs_retry(attempts, operation_model, request_dict,
                                 success_response, exception):
             attempts += 1
+            # add retry information to response
+            if success_response is not None and \
+                'Error' in success_response[1]:
+                retries.append(success_response[1]['Error'])
             # If there is a stream associated with the request, we need
             # to reset it before attempting to send the request again.
             # This will ensure that we resend the entire contents of the
@@ -159,7 +164,7 @@ class Endpoint(object):
         if success_response is not None:
             if 'ResponseMetadata' not in success_response[1]:
                 success_response[1]['ResponseMetadata'] = {}
-            success_response[1]['ResponseMetadata']['NumAttempts'] = attempts
+            success_response[1]['ResponseMetadata']['Retries'] = retries
         if exception is not None:
             raise exception
         else:
