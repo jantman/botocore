@@ -250,9 +250,7 @@ class MaxAttemptsDecorator(BaseChecker):
         should_retry = self._should_retry(attempt_number, response,
                                           caught_exception)
         if should_retry:
-            if response is not None:
-                if 'ResponseMetadata' not in response[1]:
-                    response[1]['ResponseMetadata'] = {}
+            if response is not None and 'ResponseMetadata' in response[1]:
                 # pass self._max_attempts back in ResponseMetadata
                 response[1]['ResponseMetadata'
                     ]['MaxAttempts'] = self._max_attempts

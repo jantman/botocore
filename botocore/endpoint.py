@@ -161,9 +161,8 @@ class Endpoint(object):
             success_response, exception = self._get_response(
                 request, operation_model, attempts)
         # this *should* be None or a tuple
-        if success_response is not None:
-            if 'ResponseMetadata' not in success_response[1]:
-                success_response[1]['ResponseMetadata'] = {}
+        if success_response is not None and \
+            'ResponseMetadata' in success_response[1]:
             success_response[1]['ResponseMetadata']['Retries'] = retries
         if exception is not None:
             raise exception
