@@ -197,6 +197,82 @@ class TestRetryInterface(TestEndpointBase):
         self.assertEqual(call_args[3][0][0],
                          'needs-retry.ec2.DescribeInstances')
 
+    def test_retry_information_list(self):
+        op = Mock()
+        op.name = 'DescribeInstances'
+        get_responses = [
+            (
+                (
+                    Mock(),
+                    {
+                        'ResponseMetadata': {
+                            'HTTPStatusCode': 400,
+                            'RequestId': '1',
+                            'HTTPHeaders': {}
+                        },
+                        'Error': {
+                            'Message': 'Rate exceeded',
+                            'Code': 'Throttling'
+                        }
+                    }
+                ),
+                None
+            ),
+            (
+                (
+                    Mock(),
+                    {
+                        'ResponseMetadata': {
+                            'HTTPStatusCode': 400,
+                            'RequestId': '1',
+                            'HTTPHeaders': {}
+                        },
+                        'Error': {
+                            'Message': 'Rate exceeded',
+                            'Code': 'Throttling'
+                        }
+                    }
+                ),
+                None
+            ),
+            (
+                (
+                    Mock(),
+                    {
+                        'ResponseMetadata': {
+                            'HTTPStatusCode': 200,
+                            'RequestId': '1',
+                            'HTTPHeaders': {}
+                        }
+                    }
+                ),
+                None
+            ),
+        ]
+        patchbase = 'botocore.endpoint.Endpoint'
+        with patch('%s.create_request' % patchbase) as mock_create:
+            with patch('%s._get_response' % patchbase) as mock_get:
+                with patch('%s._needs_retry' % patchbase) as mock_needs:
+                    mock_get.side_effect = get_responses
+                    mock_needs.side_effect = [True, True, False]
+                    res = self.endpoint._send_request({'foo': 'bar'}, op)
+        self.assertEqual(mock_create.call_count, 3)
+        self.assertEqual(mock_get.call_count, 3)
+        # retry errors
+        self.assertEqual(
+            res[1]['ResponseMetadata']['Retries'],
+            [
+                {
+                    'Message': 'Rate exceeded',
+                    'Code': 'Throttling'
+                },
+                {
+                    'Message': 'Rate exceeded',
+                    'Code': 'Throttling'
+                }
+            ]
+        )
+
 
 class TestS3ResetStreamOnRetry(TestEndpointBase):
     def setUp(self):
