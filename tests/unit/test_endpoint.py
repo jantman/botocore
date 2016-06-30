@@ -140,27 +140,6 @@ class TestRetryInterface(TestEndpointBase):
         super(TestRetryInterface, self).setUp()
         self.retried_on_exception = None
 
-    def max_attempts_retry_handler(self, attempts, **kwargs):
-        # Simulate a max requests of 3.
-        self.total_calls += 1
-        if attempts == 3:
-            return None
-        else:
-            # Returning anything non-None will trigger a retry,
-            # but 0 here is so that time.sleep(0) happens.
-            return 0
-
-    def connection_error_handler(self, attempts, caught_exception, **kwargs):
-        self.total_calls += 1
-        if attempts == 3:
-            return None
-        elif isinstance(caught_exception, ConnectionError):
-            # Returning anything non-None will trigger a retry,
-            # but 0 here is so that time.sleep(0) happens.
-            return 0
-        else:
-            return None
-
     def test_retry_events_are_emitted(self):
         op = Mock()
         op.name = 'DescribeInstances'
