@@ -58,14 +58,12 @@ class TestRetryCheckers(unittest.TestCase):
         # Retry up to three times.
         self.assert_should_be_retried(
             (HTTP_500_RESPONSE, response), attempt_number=1)
-        self.assertEqual(response['ResponseMetadata']['MaxAttempts'], 3)
         self.assert_should_be_retried(
             (HTTP_500_RESPONSE, {}), attempt_number=2)
         # On the third failed response, we've reached the
         # max attempts so we should return False.
         self.assert_should_not_be_retried(
             (HTTP_500_RESPONSE, response), attempt_number=3)
-        self.assertEqual(response['ResponseMetadata']['MaxAttempts'], 3)
         self.assertTrue(response['ResponseMetadata']['MaxAttemptsReached'])
 
     def test_max_attempts_successful(self):
